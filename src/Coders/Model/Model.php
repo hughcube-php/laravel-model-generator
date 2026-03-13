@@ -260,12 +260,11 @@ class Model
             $cast = 'string';
         }
 
-        // Track dates
-        if ($cast == 'date') {
-            $this->dates[] = $propertyName;
-        }
         // Track attribute casts
-        elseif ($cast != 'string') {
+        if ($cast == 'date') {
+            // Use datetime cast instead of deprecated $dates property
+            $this->casts[$propertyName] = $cast = 'datetime';
+        } elseif ($cast != 'string') {
             $this->casts[$propertyName] = $cast;
         }
 
@@ -355,6 +354,7 @@ class Model
                 $type = '\Illuminate\Support\Collection';
                 break;
             case 'date':
+            case 'datetime':
                 $type = '\Carbon\Carbon';
                 break;
             case 'binary':
