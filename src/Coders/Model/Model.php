@@ -355,7 +355,7 @@ class Model
                 break;
             case 'date':
             case 'datetime':
-                $type = '\Carbon\Carbon';
+                $type = '\Illuminate\Support\Carbon';
                 break;
             case 'binary':
                 $type = 'string';
