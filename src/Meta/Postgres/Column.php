@@ -28,12 +28,14 @@ class Column implements \Reliese\Meta\Column
      * @todo check these
      */
     public static $mappings = [
-        'string' => ['varchar', 'text', 'string', 'char', 'enum', 'tinytext', 'mediumtext', 'longtext', 'json'],
-        'date' => ['datetime', 'year', 'date', 'time', 'timestamp'],
-        'int' => ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 'bigserial', 'serial', 'smallserial', 'tinyserial', 'serial4', 'serial8'],
+        'string' => ['varchar', 'character varying', 'text', 'string', 'char', 'character', 'enum', 'tinytext', 'mediumtext', 'longtext', 'uuid', 'citext', 'inet', 'macaddr', 'money'],
+        'json' => ['json', 'jsonb'],
+        'date' => ['datetime', 'year', 'date', 'time', 'time without time zone', 'time with time zone', 'timestamp', 'timestamp without time zone', 'timestamp with time zone'],
+        'int' => ['int', 'integer', 'tinyint', 'smallint', 'mediumint', 'bigint', 'bigserial', 'serial', 'smallserial', 'tinyserial', 'serial4', 'serial8', 'int2', 'int4', 'int8'],
         'float' => ['float', 'decimal', 'numeric', 'dec', 'fixed', 'double', 'real', 'double precision'],
         'boolean' => ['boolean', 'bool', 'bit'],
-        'binary' => ['blob', 'longblob', 'jsonb'],
+        'binary' => ['blob', 'longblob', 'bytea'],
+        'array' => ['ARRAY'],
     ];
 
     /**

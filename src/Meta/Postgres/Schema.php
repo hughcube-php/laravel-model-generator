@@ -3,6 +3,7 @@
 namespace Reliese\Meta\Postgres;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
 use Reliese\Meta\Blueprint;
 use Illuminate\Support\Fluent;
 use Illuminate\Database\Connection;
@@ -34,6 +35,11 @@ class Schema implements \Reliese\Meta\Schema
     protected $tables = [];
 
     /**
+     * @var string
+     */
+    protected $schema_database = 'public';
+
+    /**
      * Mapper constructor.
      *
      * @param string $schema
@@ -41,6 +47,7 @@ class Schema implements \Reliese\Meta\Schema
      */
     public function __construct($schema, $connection)
     {
+        $this->schema_database = Config::get('database.connections.pgsql.schema', 'public');
         $this->schema = $schema;
         $this->connection = $connection;
 
@@ -48,22 +55,10 @@ class Schema implements \Reliese\Meta\Schema
     }
 
     /**
-     * @return \Doctrine\DBAL\Schema\AbstractSchemaManager
-     * @todo: Use Doctrine instead of raw database queries
-     */
-    public function manager()
-    {
-        return $this->connection->getDoctrineSchemaManager();
-    }
-
-    /**
      * Loads schema's tables' information from the database.
      */
     protected function load()
     {
-        // Note that "schema" refers to the database name,
-        // not a pgsql schema.
-        $this->connection->raw('\c '.$this->wrap($this->schema));
         $tables = $this->fetchTables($this->schema);
         foreach ($tables as $table) {
             $blueprint = new Blueprint($this->connection->getName(), $this->schema, $table);
@@ -81,9 +76,22 @@ class Schema implements \Reliese\Meta\Schema
      */
     protected function fetchTables()
     {
-        $rows = $this->arraify($this->connection->select(
-            'SELECT * FROM pg_tables where schemaname=\'public\''
-        ));
+        $excludePartitions = Config::get('models.*.exclude_partition_children', false);
+
+        if ($excludePartitions) {
+            $rows = $this->arraify($this->connection->select(
+                "SELECT t.tablename FROM pg_tables t
+                 JOIN pg_class c ON c.relname = t.tablename
+                     AND c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = '$this->schema_database')
+                 WHERE t.schemaname = '$this->schema_database'
+                     AND NOT EXISTS (SELECT 1 FROM pg_inherits i WHERE i.inhrelid = c.oid)"
+            ));
+        } else {
+            $rows = $this->arraify($this->connection->select(
+                "SELECT * FROM pg_tables where schemaname='$this->schema_database'"
+            ));
+        }
+
         $names = array_column($rows, 'tablename');
 
         return Arr::flatten($names);
@@ -96,7 +104,7 @@ class Schema implements \Reliese\Meta\Schema
     {
         $rows = $this->arraify($this->connection->select(
             'SELECT * FROM information_schema.columns '.
-            'WHERE table_schema=\'public\''.
+            "WHERE table_schema='$this->schema_database'".
             'AND table_name='.$this->wrap($blueprint->table())
         ));
         foreach ($rows as $column) {
@@ -273,7 +281,8 @@ class Schema implements \Reliese\Meta\Schema
      */
     public static function schemas(Connection $connection)
     {
-        $schemas = $connection->getDoctrineSchemaManager()->listDatabases();
+        $schemas = $connection->select('SELECT datname FROM pg_database');
+        $schemas = array_column($schemas, 'datname');
 
         return array_diff($schemas, [
             'postgres',
