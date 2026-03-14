@@ -35,7 +35,7 @@ class Column implements \Reliese\Meta\Column
         'float' => ['float', 'decimal', 'numeric', 'dec', 'fixed', 'double', 'real', 'double precision'],
         'boolean' => ['boolean', 'bool', 'bit'],
         'binary' => ['blob', 'longblob', 'bytea'],
-        'array' => ['ARRAY'],
+        'ARRAY' => ['ARRAY'],
     ];
 
     /**

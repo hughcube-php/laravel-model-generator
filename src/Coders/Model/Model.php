@@ -347,6 +347,7 @@ class Model
                 $type = '\stdClass';
                 break;
             case 'array':
+            case 'ARRAY':
             case 'json':
                 $type = 'array';
                 break;
